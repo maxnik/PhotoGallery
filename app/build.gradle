@@ -15,6 +15,9 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+        android.applicationVariants.all { variant ->
+            variant.buildConfigField "String", "FLICKR_API_KEY", getApiKey()
+        }
     }
 }
 
@@ -26,4 +29,10 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
     implementation 'com.android.support:recyclerview-v7:26.1.0'
+}
+
+def getApiKey(){
+    Properties props = new Properties()
+    props.load(new FileInputStream(new File('secrets.properties')))
+    return props['FLICKR_API_KEY']
 }
