@@ -31,6 +31,7 @@ public class FlickrFetchr {
         try {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             InputStream in = connection.getInputStream();
+            // will not actually connect to the endpoint until a getInputStream() call
 
             if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
                 throw new IOException(connection.getResponseMessage() + ": with " + urlSpec);
