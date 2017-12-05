@@ -52,7 +52,7 @@ public class FlickrFetchr {
         return new String(getUrlBytes(urlSpec));
     }
 
-    public List<GalleryItem> fetchItems() {
+    public List<GalleryItem> fetchItems(Integer page) {
 
         List<GalleryItem> items = new ArrayList<>();
 
@@ -64,6 +64,7 @@ public class FlickrFetchr {
                     .appendQueryParameter("format", "json")
                     .appendQueryParameter("nojsoncallback", "1")
                     .appendQueryParameter("extras", "url_s")
+                    .appendQueryParameter("page", page.toString())
                     .build().toString();
 
             String jsonString = getUrlString(url);
@@ -78,11 +79,13 @@ public class FlickrFetchr {
             Log.e(TAG, "Failed to fetch items", ioe);
         }
 
+        List<GalleryItem> filteredList = new ArrayList<>();
         for (int i = 0; i < items.size(); i++) {
-            if (items.get(i).getUrl() == null) {
-                items.remove(i);
+            GalleryItem item = items.get(i);
+            if (item.getUrl() != null) {
+                filteredList.add(item);
             }
         }
-        return items;
+        return filteredList;
     }
 }
