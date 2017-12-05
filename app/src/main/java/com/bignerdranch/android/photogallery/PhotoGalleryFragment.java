@@ -30,6 +30,7 @@ public class PhotoGalleryFragment extends Fragment {
     private ThumbnailDownloader<PhotoHolder> mThumbnailDownloader;
     private int mPage = 1;
     private GridLayoutManager mLayoutManager;
+    private PhotoAdapter mPhotoAdapter;
 
     private static final String TAG = "PhotoGalleryFragment";
 
@@ -103,7 +104,8 @@ public class PhotoGalleryFragment extends Fragment {
 
     private void setupAdapter() {
         if (isAdded()) {
-            mPhotoRecyclerView.setAdapter(new PhotoAdapter(mItems));
+            mPhotoAdapter = new PhotoAdapter(mItems);
+            mPhotoRecyclerView.setAdapter(mPhotoAdapter);
         }
     }
 
@@ -162,8 +164,14 @@ public class PhotoGalleryFragment extends Fragment {
 
         @Override
         protected void onPostExecute(List<GalleryItem> galleryItems) {
+            int oldSize = mItems.size();
+            int insertedSize = galleryItems.size();
             mItems.addAll(galleryItems);
-            setupAdapter();
+            if (mPhotoAdapter != null) {
+                mPhotoAdapter.notifyItemRangeInserted(oldSize, insertedSize);
+            } else {
+                setupAdapter();
+            }
             mPage++;
         }
     }
