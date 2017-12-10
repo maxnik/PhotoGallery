@@ -24,6 +24,7 @@ public class ThumbnailDownloader<T> extends HandlerThread {
     private ConcurrentMap<T, String> mRequestMap = new ConcurrentHashMap<>();
     private Handler mResponseHandler;
     private ThumbnailDownloadListener<T> mTThumbnailDownloadListener;
+    private FlickrPhotosCache mCache;
 
     public interface ThumbnailDownloadListener<T> {
         void onThumbnailDownloaded(T target, Bitmap thumbnail);
@@ -46,6 +47,10 @@ public class ThumbnailDownloader<T> extends HandlerThread {
 
     @Override
     protected void onLooperPrepared() {
+        final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
+
+        mCache = new FlickrPhotosCache(maxMemory / 8);
+
         mRequestHandler = new Handler() {
             @Override
             public void handleMessage(Message msg) {
@@ -76,34 +81,30 @@ public class ThumbnailDownloader<T> extends HandlerThread {
     }
 
     private void handleRequest(final T target) {
-        try {
-            final String url = mRequestMap.get(target);
 
-            if (url == null) {
-                return;
-            }
+        final String url = mRequestMap.get(target);
 
-            byte[] bitmapBytes = new FlickrFetchr().getUrlBytes(url);
-            final Bitmap bitmap = BitmapFactory.decodeByteArray(bitmapBytes, 0,
-                                                                bitmapBytes.length);
-            Log.i(TAG, "Bitmap created");
-            mResponseHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    if (mRequestMap.get(target) != url || mHasQuit) {
-                        // RecyclerView may have recycled the PhotoHolder and requested
-                        // a different URL for it.
-                        // If the thread has already quit , it may be unsafe to run any callbacks
-                        return;
-                    }
-
-                    mRequestMap.remove(target);
-
-                    mTThumbnailDownloadListener.onThumbnailDownloaded(target, bitmap);
-                }
-            });
-        } catch (IOException ioe) {
-            Log.e(TAG, "Error downloading image", ioe);
+        if (url == null) {
+            return;
         }
+
+        final Bitmap bitmap = mCache.get(url);
+
+        Log.i(TAG, "Bitmap created");
+        mResponseHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (mRequestMap.get(target) != url || mHasQuit) {
+                    // RecyclerView may have recycled the PhotoHolder and requested
+                    // a different URL for it.
+                    // If the thread has already quit , it may be unsafe to run any callbacks
+                    return;
+                }
+
+                mRequestMap.remove(target);
+
+                mTThumbnailDownloadListener.onThumbnailDownloaded(target, bitmap);
+            }
+        });
     }
 }
