@@ -80,6 +80,8 @@ public class PhotoGalleryFragment extends Fragment {
                 Log.d(TAG, "QueryTextSubmit: " + query);
                 QueryPreferences.setStoredQuery(getActivity(), query);
 
+                searchView.clearFocus();
+
                 updateItems();
                 return true;
             }
